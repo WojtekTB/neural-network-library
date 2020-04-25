@@ -18,6 +18,12 @@ class NeuralNetwork {
         console.log(`Entered debug mode.`);
     }
 
+    printWeights() {
+        for (let i = 0; i < this.layers.length; i++) {
+            this.layers[i].weights.print();
+        }
+    }
+
     addLayer(numberOfNodes, activationFunction) {
         let inputs;
         let nodes = numberOfNodes;
