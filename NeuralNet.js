@@ -1,3 +1,11 @@
+var SIGMOID_FUNCTION = function (n) {
+    return 1 / (1 + Math.pow(2.71828, -n));
+}
+
+var SIGN_FUNCTION = function (n) {
+    return Math.sign(n);
+}
+
 class NeuralNetwork {
     constructor(numberOfInputs) {
         this.numberOfInputs = numberOfInputs;

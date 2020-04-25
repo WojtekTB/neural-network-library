@@ -12,8 +12,8 @@
     <script>
         let nn = new NeuralNetwork(4);
         nn.debugMode();
-        nn.addLayer(2, Math.sign);
-        nn.addLayer(1, Math.sign);
+        nn.addLayer(2, SIGMOID_FUNCTION);
+        nn.addLayer(1, SIGMOID_FUNCTION);
         let prediction = nn.feedForward([-3, 5, 2, -3]);
         console.log(prediction);
     </script>
