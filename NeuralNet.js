@@ -58,6 +58,9 @@ class NeuralNetwork {
                 console.log(`Fed ${matrixInput.data.toString()} to a layer number ${i + 1}`);
             }
             matrixInput = this.layers[i].feedThrough(matrixInput);
+            if (this.debug) {
+                console.log(`Layer number ${i + 1} returned ${matrixInput.data.toString()}`);
+            }
         }
         let output = matrixInput;
         if (this.debug) {

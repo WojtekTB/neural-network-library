@@ -98,24 +98,28 @@ class Matrix {
     }
 
     dot(input) {
-        //dot product with two matrices
-        // console.log(this, input);
-        if (this.coulombs !== input.rows) {
+        //assume dot product of A*B
+        let matrixA = this;
+        let matrixB = input;
+
+        if (matrixA.coulombs !== matrixB.rows) {//check if you can do dot product
             console.error("Matrices are not the right size!");
             return;
         }
-        let output = new Matrix(this.rows, input.coulombs);
-        for (let i = 0; i < this.rows; i++) {
-            for (let j = 0; j < input.coulombs; j++) {
-                let newValue = 0;
-                for (let k = 0; k < this.coulombs; k++) {
-                    newValue += this.data[i][j] * input.data[k][i]
+
+        let output = new Matrix(matrixA.rows, matrixB.coulombs);
+
+        for (let i = 0; i < matrixA.rows; i++) {
+            for (let j = 0; j < matrixB.coulombs; j++) {
+                let sum = 0;
+                for (let k = 0; k < matrixA.coulombs; k++) {
+                    sum += matrixA.data[i][k] * matrixB.data[k][j];
                 }
-                output.data[i][j] = newValue;
+                output.data[i][j] = sum;
             }
         }
-        // output.print();
         return output;
+
     }
 
     cross(input) {

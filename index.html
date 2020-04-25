@@ -14,7 +14,13 @@
         nn.debugMode();
         nn.addLayer(4, SIGMOID_FUNCTION);
         nn.addLayer(4, SIGMOID_FUNCTION);
+        nn.addLayer(4, SIGMOID_FUNCTION);
+        nn.addLayer(4, SIGMOID_FUNCTION);
+        nn.addLayer(1, SIGMOID_FUNCTION);
         let prediction = nn.feedForward([-3, 5, 2, -3]);
+
+        // nn.printWeights();
+
         console.log(prediction);
     </script>
 
