@@ -7,10 +7,15 @@
     <title>Vadim's poopy neural netweork library</title>
 
     <script src="./matrix-math.js"></script>
+    <script src="./NeuralNet.js"></script>
+
     <script>
-        let a = new Matrix(2, 3);
-        a.randomize();
-        a.print();
+        let nn = new NeuralNetwork(4);
+        nn.debugMode();
+        nn.addLayer(2, Math.sign);
+        nn.addLayer(1, Math.sign);
+        let prediction = nn.feedForward([-3, 5, 2, -3]);
+        console.log(prediction);
     </script>
 
 </head>
