@@ -11,6 +11,11 @@ class NeuralNetwork {
         this.numberOfInputs = numberOfInputs;
         this.layers = [];
         this.debug = false;
+        this.learningRate = 0.1;
+    }
+
+    setLearningRate(lr) {
+        this.learningRate = lr;
     }
 
     debugMode() {
@@ -67,6 +72,28 @@ class NeuralNetwork {
             console.log(`Neural network recieved ${originalInputs} and returned ${output.toArray()}`);
         }
         return output.toArray();
+    }
+
+    train(input, answer) {
+        /**
+         * Answers come out in a form of an array of floats
+         * Both input and answer should be an array
+         */
+        let prediction = this.feedForward(input);
+
+        let delta = [];
+
+        for (let i = 0; i < prediction.length; i++) {
+            delta.push(answer[i] - prediction[i]);
+        }
+        let sum = 0;
+        for (let i = 0; i < delta.length; i++) {
+            sum += delta[i];
+        }
+        for (let i = 0; i < delta.length; i++) {
+            delta[i] = delta[i] / sum;
+        }
+        console.log(delta);
     }
 }
 
