@@ -37,7 +37,7 @@ class NeuralNetwork {
         } else {
             inputs = this.layers[this.layers.length - 1].numberOfNodes;
         }
-        this.layers.push(new Layer(inputs, nodes, activationFunction));
+        this.layers.push(new Layer(inputs + 1, nodes, activationFunction));
 
         if (this.debug) {
             console.log(`Added a layer with ${inputs} inputs and ${nodes} nodes.`);
@@ -53,7 +53,7 @@ class NeuralNetwork {
             }
         } else {
             matrixInput = new Matrix(inputs.length, 1);
-            matrixInput = matrixInput.fromArray(inputs);
+            matrixInput = matrixInput.fromArray(inputs.concat([1]));
         }
 
         let originalInputs = matrixInput.data.toString();
@@ -63,6 +63,10 @@ class NeuralNetwork {
                 console.log(`Fed ${matrixInput.data.toString()} to a layer number ${i + 1}`);
             }
             matrixInput = this.layers[i].feedThrough(matrixInput);
+            let arrayForm = matrixInput.toArray();
+            arrayForm = arrayForm.concat([1]);
+            matrixInput = new Matrix(1, arrayForm.length);
+            matrixInput = matrixInput.fromArray(arrayForm);
             if (this.debug) {
                 console.log(`Layer number ${i + 1} returned ${matrixInput.data.toString()}`);
             }
@@ -71,7 +75,8 @@ class NeuralNetwork {
         if (this.debug) {
             console.log(`Neural network recieved ${originalInputs} and returned ${output.toArray()}`);
         }
-        return output.toArray();
+        let outputArrat = output.toArray();
+        return outputArrat.splice(0, outputArrat.length - 1);
     }
 
     train(input, answer) {
@@ -81,19 +86,15 @@ class NeuralNetwork {
          */
         let prediction = this.feedForward(input);
 
-        let delta = [];
+        let deltaSquared = [];
 
         for (let i = 0; i < prediction.length; i++) {
-            delta.push(answer[i] - prediction[i]);
+            //find difference squared
+            deltaSquared.push(Math.pow(answer[i] - prediction[i], 2));
         }
-        let sum = 0;
-        for (let i = 0; i < delta.length; i++) {
-            sum += delta[i];
-        }
-        for (let i = 0; i < delta.length; i++) {
-            delta[i] = delta[i] / sum;
-        }
-        console.log(delta);
+        console.log(deltaSquared);
+
+        //figure out how much to change previous 
     }
 }
 
