@@ -2,6 +2,10 @@ var SIGMOID_FUNCTION = function (n) {
     return 1 / (1 + Math.pow(2.71828, -n));
 }
 
+var UN_SUGMOID_FUNCTION = function (y) {
+    return y * (1 - y)
+}
+
 var SIGN_FUNCTION = function (n) {
     return Math.sign(n);
 }
@@ -9,112 +13,156 @@ var SIGN_FUNCTION = function (n) {
 class NeuralNetwork {
     constructor(numberOfInputs) {
         this.numberOfInputs = numberOfInputs;
+        this.hiddenFunction = SIGMOID_FUNCTION;
+        this.outputFunction = SIGN_FUNCTION;
         this.layers = [];
-        this.debug = false;
-        this.learningRate = 0.1;
     }
 
-    setLearningRate(lr) {
-        this.learningRate = lr;
-    }
-
-    debugMode() {
-        this.debug = true;
-        console.log(`Entered debug mode.`);
-    }
-
-    printWeights() {
+    feedForward(input) {
+        let input_array = input.concat([1]);
+        let input_matrix = Matrix.fromArray(input_array);
         for (let i = 0; i < this.layers.length; i++) {
-            this.layers[i].weights.print();
+            input_matrix = Matrix.multiply(input_matrix, Matrix.transpose(this.layers[i]));
+            input_array = Matrix.toArray(input_matrix);
+            input_array = input_array.concat([1]);
+            input_matrix = Matrix.fromArray(input_array);
+            if (i < this.layers.length - 1) {
+                input_matrix = Matrix.applyToAll(input_matrix, this.hiddenFunction);
+            }
         }
+        input_matrix = Matrix.applyToAll(input_matrix, this.outputFunction);
+        input_array = Matrix.toArray(input_matrix);
+        input_array.pop();//remove the bias 1 at the end
+        return input_array;
     }
 
-    addLayer(numberOfNodes, activationFunction) {
-        let inputs;
-        let nodes = numberOfNodes;
+    addLayer(numberNodes) {
         if (this.layers.length === 0) {
-            inputs = this.numberOfInputs;
+            let m = new Matrix(numberNodes, this.numberOfInputs + 1);
+            m.randomize();
+            this.layers.push(m);// +1 because of bias
         } else {
-            inputs = this.layers[this.layers.length - 1].numberOfNodes;
-        }
-        this.layers.push(new Layer(inputs + 1, nodes, activationFunction));
-
-        if (this.debug) {
-            console.log(`Added a layer with ${inputs} inputs and ${nodes} nodes.`);
+            let m = new Matrix(numberNodes, this.layers[this.layers.length - 1].rows + 1);
+            m.randomize();
+            this.layers.push(m);
         }
     }
 
-    feedForward(inputs) {
-        let matrixInput;
-        if (inputs instanceof Matrix) {
-            matrixInput = inputs;
-            if (matrixInput.rows > 1) {//flip the array
-                matrixInput = matrixInput.transmuteVertical();
-            }
-        } else {
-            matrixInput = new Matrix(inputs.length, 1);
-            matrixInput = matrixInput.fromArray(inputs.concat([1]));
-        }
-
-        let originalInputs = matrixInput.data.toString();
-
-        for (let i = 0; i < this.layers.length; i++) {
-            if (this.debug) {
-                console.log(`Fed ${matrixInput.data.toString()} to a layer number ${i + 1}`);
-            }
-            matrixInput = this.layers[i].feedThrough(matrixInput);
-            let arrayForm = matrixInput.toArray();
-            arrayForm = arrayForm.concat([1]);
-            matrixInput = new Matrix(1, arrayForm.length);
-            matrixInput = matrixInput.fromArray(arrayForm);
-            if (this.debug) {
-                console.log(`Layer number ${i + 1} returned ${matrixInput.data.toString()}`);
-            }
-        }
-        let output = matrixInput;
-        if (this.debug) {
-            console.log(`Neural network recieved ${originalInputs} and returned ${output.toArray()}`);
-        }
-        let outputArrat = output.toArray();
-        return outputArrat.splice(0, outputArrat.length - 1);
+    addOutput(numberOfOutputs) {
+        let m = new Matrix(numberNodes, this.layers[this.layers.length - 1].rows + 1);
+        m.randomize();
+        this.layers.push(m);
     }
 
-    train(input, answer) {
-        /**
-         * Answers come out in a form of an array of floats
-         * Both input and answer should be an array
-         */
-        let prediction = this.feedForward(input);
+    setOutputFunction(f) {
+        this.outputFunction = f;
+    }
 
-        let deltaSquared = [];
-
-        for (let i = 0; i < prediction.length; i++) {
-            //find difference squared
-            deltaSquared.push(Math.pow(answer[i] - prediction[i], 2));
-        }
-        console.log(deltaSquared);
-
-        //figure out how much to change previous 
+    setHiddenFunction(f) {
+        this.hiddenFunction = f;
     }
 }
 
-/**
- * Every layer needs to have a matrix of weights
- * 
- */
+class Matrix {
+    constructor(rows, columns) {
+        this.rows = rows;
+        this.columns = columns;
+        this.data = [];
 
-class Layer {
-    constructor(numberOfInputs, numberOfNodes, activationFunction) {
-        this.numberOfInputs = numberOfInputs;
-        this.numberOfNodes = numberOfNodes;
-        this.activationFunction = activationFunction;
-        this.weights = new Matrix(numberOfInputs, numberOfNodes);
-        this.weights.randomize();
+        //init data
+        for (let i = 0; i < rows; i++) {
+            let newRow = [];
+            for (let j = 0; j < columns; j++) {
+                newRow.push(0);
+            }
+            this.data.push(newRow);
+        }
     }
-    feedThrough(input) {
-        let output = input.dot(this.weights);
-        // output = output.transmuteVertical();
-        output.applyFunctionToAll(this.activationFunction);
-        return output;
+
+    print() {
+        console.table(this.data);
+    }
+
+    set(data, r, c) {
+        this.data[r][c] = data;
+    }
+
+    randomize() {
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.columns; j++) {
+                this.set((Math.random() * 2) - 1, i, j);
+            }
+        }
+    }
+
+    static applyToAll(m, f) {
+        let n = new Matrix(m.rows, m.columns);
+        for (let i = 0; i < n.rows; i++) {
+            for (let j = 0; j < n.columns; j++) {
+                n.data[i][j] = f(m.data[i][j]);
+            }
+        }
+        return n;
+    }
+
+    static fromArray(a) {
+        let n = new Matrix(1, a.length);
+        for (let i = 0; i < a.length; i++) {
+            n.set(a[i], 0, i);
+        }
+        return n;
+    }
+
+    static toArray(m) {
+        let a = [];
+        for (let i = 0; i < m.columns; i++) {
+            a.push(m.data[0][i]);
+        }
+        return a;
+    }
+
+    static transpose(m) {
+        let n = new Matrix(m.columns, m.rows);
+        for (let i = 0; i < n.rows; i++) {
+            for (let j = 0; j < n.columns; j++) {
+                n.data[i][j] = m.data[j][i];
+            }
+        }
+        return n;
+    }
+
+    static multiply(a, b) {
+        let matrixA = a;
+        let matrixB = b;
+        if (matrixA.columns !== matrixB.rows) {//check if you can do dot product
+            console.error("Matrices are not the right size!");
+            return;
+        }
+        let n = new Matrix(a.rows, b.columns);
+
+        for (let i = 0; i < n.rows; i++) {
+            for (let j = 0; j < n.columns; j++) {
+                let newVal = 0;
+                for (let k = 0; k < a.columns; k++) {
+                    newVal += matrixA.data[i][k] * matrixB.data[k][j];
+                }
+                n.set(newVal, i, j);
+            }
+        }
+        return n;
+    }
+
+    static add(a, b) {
+        let matrixA = a;
+        let matrixB = b;
+        let n = new Matrix(a.rows, b.columns);
+
+        for (let i = 0; i < n.rows; i++) {
+            for (let j = 0; j < n.columns; j++) {
+                let newVal = matrixA[i][j] * matrixB[i][j];
+                n.set(newVal, i, j);
+            }
+        }
+        return n;
     }
 }

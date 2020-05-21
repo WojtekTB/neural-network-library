@@ -23,12 +23,23 @@ class Matrix {
         }
         return newMatrix;
     }
-    fromArrayVertical(array) {
-        let newMatrix = new Matrix(array.length, 1);
+
+    static fromArray(array) {
+        let newMatrix = new Matrix(1, array.length);
         for (let i = 0; i < array.length; i++) {
-            newMatrix.set(array[i], i, 0);
+            newMatrix.set(array[i], 0, i);
         }
         return newMatrix;
+    }
+
+    static transpose(m) {
+        let outputMatrix = new Matrix(m.coulombs, m.rows);
+        for (let i = 0; i < m.coulombs; i++) {
+            for (let j = 0; j < m.rows; j++) {
+                outputMatrix.data[i][j] = m.data[j][i];
+            }
+        }
+        return outputMatrix;
     }
 
     toArray() {
@@ -72,7 +83,6 @@ class Matrix {
                 }
             }
         }
-
     }
 
     multiply(input) {
@@ -95,6 +105,39 @@ class Matrix {
                 }
             }
         }
+    }
+    static dot(a, b) {
+        //assume dot product of A*B
+        let matrixA = a;
+        let matrixB = b;
+
+        if (matrixA.coulombs !== matrixB.rows) {//check if you can do dot product
+            console.error("Matrices are not the right size!");
+            return;
+        }
+
+        let output = new Matrix(matrixA.rows, matrixB.coulombs);
+
+        for (let i = 0; i < matrixA.rows; i++) {
+            for (let j = 0; j < matrixB.coulombs; j++) {
+                let sum = 0;
+                for (let k = 0; k < matrixA.coulombs; k++) {
+                    sum += matrixA.data[i][k] * matrixB.data[k][j];
+                }
+                output.data[i][j] = sum;
+            }
+        }
+        return output;
+    }
+
+    static subtract(a, b) {
+        let outputMatrix = new Matrix(a.rows, b.coulombs);
+        for (let i = 0; i < outputMatrix.rows; i++) {
+            for (let j = 0; j < outputMatrix.coulombs; j++) {
+                outputMatrix.data[i][j] = a.data[i][j] - b.data[i][j];
+            }
+        }
+        return outputMatrix;
     }
 
     dot(input) {

@@ -6,18 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vadim's poopy neural netweork library</title>
 
-    <script src="./matrix-math.js"></script>
+    <!-- <script src="./matrix-math.js"></script> -->
     <script src="./NeuralNet.js"></script>
 
     <script>
         let nn = new NeuralNetwork(4);
-        nn.debugMode();
-        nn.addLayer(4, SIGMOID_FUNCTION);
-        nn.addLayer(4, SIGMOID_FUNCTION);
-        nn.addLayer(4, SIGMOID_FUNCTION);
-        nn.addLayer(4, SIGMOID_FUNCTION);
-        nn.addLayer(4, SIGMOID_FUNCTION);
-        nn.train([1, 2, 3, 4], [0, 0, 0, 1]);
+        // nn.debugMode();
+        nn.addLayer(4);
+        nn.addLayer(4);
+        nn.addLayer(2);
+        let a = nn.feedForward([1, 2, 3, 4]);
+        console.log(a);
+        // nn.train([1, 2, 3, 4], [0, 1]);
     </script>
 
 </head>
