@@ -15,7 +15,13 @@ class NeuralNetwork {
         this.numberOfInputs = numberOfInputs;
         this.hiddenFunction = SIGMOID_FUNCTION;
         this.outputFunction = SIGN_FUNCTION;
+        this.learningRate = 0.01;
         this.layers = [];
+    }
+
+    setLearningRate(lr) {
+        //by deafult 0.01
+        this.learningRate = lr;
     }
 
     static copy(nn) {
@@ -62,6 +68,11 @@ class NeuralNetwork {
         input_array = Matrix.toArray(input_matrix);
         input_array.pop();//remove the bias 1 at the end
         return input_array;
+    }
+
+    reward() {
+        //this function is meant to make an error gradient and then increase those connections that are good, and those that are not so much
+
     }
 
     addLayer(numberNodes) {
