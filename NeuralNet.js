@@ -24,6 +24,7 @@ class NeuralNetwork {
         this.outputFunction = SIGN_FUNCTION;
         this.learningRate = 0.01;
         this.layers = [];
+        this.biases = [];
     }
 
     setLearningRate(lr) {
@@ -62,20 +63,18 @@ class NeuralNetwork {
     }
 
     feedForward(input) {
-        let input_array = input.concat([1]);
+        let input_array = input;
         let input_matrix = Matrix.fromArray(input_array);
         for (let i = 0; i < this.layers.length; i++) {
             input_matrix = Matrix.multiply(input_matrix, Matrix.transpose(this.layers[i]));
-            input_array = Matrix.toArray(input_matrix);
-            input_array = input_array.concat([1]);
-            input_matrix = Matrix.fromArray(input_array);
+            input_matrix = Matrix.add(input_matrix, this.biases[i]);
             if (i < this.layers.length - 1) {
                 input_matrix = Matrix.applyToAll(input_matrix, this.hiddenFunction);
+            } else {
+                input_matrix = Matrix.applyToAll(input_matrix, this.outputFunction);
             }
         }
-        input_matrix = Matrix.applyToAll(input_matrix, this.outputFunction);
         input_array = Matrix.toArray(input_matrix);
-        input_array.pop();//remove the bias 1 at the end
         return input_array;
     }
 
@@ -83,7 +82,7 @@ class NeuralNetwork {
         let guess = this.feedForward(input);
 
         if (guess.length !== labels.length) {
-            throw `Labels do not fit Neural Net's output layer. Expected ${guess.length} labels but got ${output.length}.`;
+            throw `Labels do not fit Neural Net's output layer. Expected ${guess.length} labels but got ${labels.length}.`;
         }
 
         //convert arrays to matrix objects
@@ -99,14 +98,13 @@ class NeuralNetwork {
         for (let i = this.layers.length - 1; i > 0; i--) {
             //transpose the weights
             let transposedWeights = Matrix.transpose(this.layers[i]);
-
-            transposedWeights.print();
-            error[error.length - 1].print();
-
+            //multiply weights by errors of its connected layer
             let answer = Matrix.multiply(transposedWeights, error[error.length - 1]);
-
             error.push(answer);
         }
+
+
+        console.log(error);
 
     }
 
@@ -117,14 +115,18 @@ class NeuralNetwork {
 
     addLayer(numberNodes) {
         if (this.layers.length === 0) {
-            let m = new Matrix(numberNodes, this.numberOfInputs + 1);
-            m.randomize();
-            this.layers.push(m);// +1 because of bias
+            let l = new Matrix(numberNodes, this.numberOfInputs);
+            l.randomize();
+            this.layers.push(l);
+
         } else {
-            let m = new Matrix(numberNodes, this.layers[this.layers.length - 1].rows + 1);
+            let m = new Matrix(numberNodes, this.layers[this.layers.length - 1].rows);
             m.randomize();
             this.layers.push(m);
         }
+        let b = new Matrix(1, numberNodes);
+        b.randomize();
+        this.biases.push(b);
     }
 
     setOutputFunction(f) {
@@ -302,10 +304,9 @@ class Matrix {
         let matrixB = b;
         let n = new Matrix(a.rows, a.columns);
 
-        for (let i = 0; i < n.rows; i++) {
-            for (let j = 0; j < n.columns; j++) {
-                let newVal = matrixA[i][j] + matrixB[i][j];
-                n.set(newVal, i, j);
+        for (let i = 0; i < a.rows; i++) {
+            for (let j = 0; j < a.columns; j++) {
+                n.data[i][j] = matrixA.data[i][j] + matrixB.data[i][j];
             }
         }
         return n;
