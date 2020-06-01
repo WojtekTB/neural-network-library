@@ -1,3 +1,10 @@
+/**
+ * TODO: fix how the biases work, right now I just kinda chuck it up to the general computation,
+ * hoping it works out, but in reality I should deal with them seperately by putting them into 
+ * their own array and then adding them onto the result instead of doing whatever I am doing right now
+ */
+
+
 var SIGMOID_FUNCTION = function (n) {
     return 1 / (1 + Math.pow(2.71828, -n));
 }
@@ -33,6 +40,7 @@ class NeuralNetwork {
     }
 
     static cross(a, b) {
+        //this is probably not useful because I don't think crossing two neural nets will actually yield one with qualities similar to its parents
         let newNN = new NeuralNetwork(a.numberOfInputs);
         for (let i = 0; i < a.layers.length; i++) {
             newNN.layers.push(Matrix.cross(a.layers[i], b.layers[i]));
@@ -41,6 +49,7 @@ class NeuralNetwork {
     }
 
     mutate(mutationRate) {
+        //this is odd to be honest because I assyme that normally you wouldn't want to just randomly change weights in the neural net?
         for (let i = 0; i < this.layers.length; i++) {
             for (let j = 0; j < this.layers[i].rows; j++) {
                 for (let k = 0; k < this.layers[i].columns; k++) {
@@ -68,6 +77,37 @@ class NeuralNetwork {
         input_array = Matrix.toArray(input_matrix);
         input_array.pop();//remove the bias 1 at the end
         return input_array;
+    }
+
+    trainBP(input, labels) {
+        let guess = this.feedForward(input);
+
+        if (guess.length !== labels.length) {
+            throw `Labels do not fit Neural Net's output layer. Expected ${guess.length} labels but got ${output.length}.`;
+        }
+
+        //convert arrays to matrix objects
+        labels = Matrix.fromArray(labels);
+        guess = Matrix.fromArray(guess);
+
+        //calculate error of output layer
+        let error = [];
+        error.push(Matrix.subtract(labels, guess));
+        error[error.length - 1] = Matrix.transpose(error[error.length - 1]);
+
+        //go backwards through all the layers and calculate their error
+        for (let i = this.layers.length - 1; i > 0; i--) {
+            //transpose the weights
+            let transposedWeights = Matrix.transpose(this.layers[i]);
+
+            transposedWeights.print();
+            error[error.length - 1].print();
+
+            let answer = Matrix.multiply(transposedWeights, error[error.length - 1]);
+
+            error.push(answer);
+        }
+
     }
 
     reward() {
@@ -260,12 +300,24 @@ class Matrix {
     static add(a, b) {
         let matrixA = a;
         let matrixB = b;
-        let n = new Matrix(a.rows, b.columns);
+        let n = new Matrix(a.rows, a.columns);
 
         for (let i = 0; i < n.rows; i++) {
             for (let j = 0; j < n.columns; j++) {
-                let newVal = matrixA[i][j] * matrixB[i][j];
+                let newVal = matrixA[i][j] + matrixB[i][j];
                 n.set(newVal, i, j);
+            }
+        }
+        return n;
+    }
+    static subtract(a, b) {
+        let matrixA = a;
+        let matrixB = b;
+        let n = new Matrix(a.rows, a.columns);
+
+        for (let i = 0; i < a.rows; i++) {
+            for (let j = 0; j < a.columns; j++) {
+                n.data[i][j] = matrixA.data[i][j] - matrixB.data[i][j];
             }
         }
         return n;
