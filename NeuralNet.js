@@ -103,14 +103,13 @@ class NeuralNetwork {
         //calculate error of output layer
         let errors = [];
         errors.push(Matrix.subtract(labels, guess));
-        errors[errors.length - 1] = Matrix.transpose(errors[errors.length - 1]);
+        errors[0] = Matrix.transpose(errors[0]);
         //go backwards through all the layers and calculate their error
         for (let i = this.layers.length - 1; i > 0; i--) {
             //transpose the weights
             let transposedWeights = Matrix.transpose(this.layers[i]);
-            console.log(transposedWeights, errors[errors.length - 1]);
             //multiply weights by errors of its connected layer
-            let answer = Matrix.multiply(transposedWeights, errors[errors.length - 1]);
+            let answer = Matrix.multiply(transposedWeights, errors[0]);
             //using unshift because I want them to be in order from input layer to output layer
             errors.unshift(answer);
         }
