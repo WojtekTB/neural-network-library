@@ -62,12 +62,15 @@ class NeuralNetwork {
         }
     }
 
-    feedForward(input) {
+    feedForward(input, returnLayerOutputs) {
         let input_array = input;
         let input_matrix = Matrix.fromArray(input_array);
+        let layerOutputs = [];
+        layerOutputs.push(Matrix.copy(input_matrix));
         for (let i = 0; i < this.layers.length; i++) {
             input_matrix = Matrix.multiply(input_matrix, Matrix.transpose(this.layers[i]));
             input_matrix = Matrix.add(input_matrix, this.biases[i]);
+            layerOutputs.push(Matrix.copy(input_matrix));
             if (i < this.layers.length - 1) {
                 input_matrix = Matrix.applyToAll(input_matrix, this.hiddenFunction);
             } else {
@@ -75,11 +78,18 @@ class NeuralNetwork {
             }
         }
         input_array = Matrix.toArray(input_matrix);
-        return input_array;
+        if (returnLayerOutputs === true) {
+            return { output: input_array, layerOutputs: layerOutputs }
+        } else {
+            return input_array;
+        }
     }
 
     trainBP(input, labels) {
-        let guess = this.feedForward(input);
+        let feedForwardOutput = this.feedForward(input, true);
+        let guess = this.feedForward(input, false);
+        // let guess = feedForwardOutput.output;
+        let layerOutputs = feedForwardOutput.layerOutputs;
 
         if (guess.length !== labels.length) {
             throw `Labels do not fit Neural Net's output layer. Expected ${guess.length} labels but got ${labels.length}.`;
@@ -89,22 +99,29 @@ class NeuralNetwork {
         labels = Matrix.fromArray(labels);
         guess = Matrix.fromArray(guess);
 
-        //calculate error of output layer
-        let error = [];
-        error.push(Matrix.subtract(labels, guess));
-        error[error.length - 1] = Matrix.transpose(error[error.length - 1]);
 
+        //calculate error of output layer
+        let errors = [];
+        errors.push(Matrix.subtract(labels, guess));
+        errors[errors.length - 1] = Matrix.transpose(errors[errors.length - 1]);
         //go backwards through all the layers and calculate their error
         for (let i = this.layers.length - 1; i > 0; i--) {
             //transpose the weights
             let transposedWeights = Matrix.transpose(this.layers[i]);
+            console.log(transposedWeights, errors[errors.length - 1]);
             //multiply weights by errors of its connected layer
-            let answer = Matrix.multiply(transposedWeights, error[error.length - 1]);
-            error.push(answer);
+            let answer = Matrix.multiply(transposedWeights, errors[errors.length - 1]);
+            //using unshift because I want them to be in order from input layer to output layer
+            errors.unshift(answer);
         }
 
-
-        console.log(error);
+        //calculate weight deltas
+        let deltas = [];
+        let lr = this.learningRate;
+        for (let i = 0; i < this.layers.length; i++) {
+            layerOutputs[i] = Matrix.elementMult(layerOutputs[i], errors[i]);
+            layerOutputs[i] = Matrix.applyToAll(layerOutputs[i], (n) => { n * lr });
+        }
 
     }
 
@@ -235,9 +252,7 @@ class Matrix {
     static copy(m) {
         let n = new Matrix(m.rows, m.columns);
         for (let i = 0; i < n.rows; i++) {
-            for (let j = 0; j < n.columns; j++) {
-                n.data[i][j] = m.data[i][j];
-            }
+            n.data[i] = m.data[i].slice();
         }
         return n;
     }
@@ -294,6 +309,19 @@ class Matrix {
                     newVal += matrixA.data[i][k] * matrixB.data[k][j];
                 }
                 n.set(newVal, i, j);
+            }
+        }
+        return n;
+    }
+
+    static elementMult(a, b) {
+        let matrixA = a;
+        let matrixB = b;
+        let n = new Matrix(a.rows, a.columns);
+
+        for (let i = 0; i < a.rows; i++) {
+            for (let j = 0; j < a.columns; j++) {
+                n.data[i][j] = matrixA.data[i][j] * matrixB.data[i][j];
             }
         }
         return n;
