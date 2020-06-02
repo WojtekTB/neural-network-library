@@ -17,11 +17,17 @@ var SIGN_FUNCTION = function (n) {
     return Math.sign(n);
 }
 
+var UN_SIGN_FUNCTION = function (n) {
+    return 0;
+}
+
 class NeuralNetwork {
     constructor(numberOfInputs) {
         this.numberOfInputs = numberOfInputs;
         this.hiddenFunction = SIGMOID_FUNCTION;
+        this.hiddenFunctionD = UN_SUGMOID_FUNCTION;
         this.outputFunction = SIGN_FUNCTION;
+        this.outputFunctionD = UN_SIGN_FUNCTION;
         this.learningRate = 0.01;
         this.layers = [];
         this.biases = [];
@@ -66,16 +72,15 @@ class NeuralNetwork {
         let input_array = input;
         let input_matrix = Matrix.fromArray(input_array);
         let layerOutputs = [];
-        layerOutputs.push(Matrix.copy(input_matrix));
         for (let i = 0; i < this.layers.length; i++) {
             input_matrix = Matrix.multiply(input_matrix, Matrix.transpose(this.layers[i]));
             input_matrix = Matrix.add(input_matrix, this.biases[i]);
-            layerOutputs.push(Matrix.copy(input_matrix));
             if (i < this.layers.length - 1) {
                 input_matrix = Matrix.applyToAll(input_matrix, this.hiddenFunction);
             } else {
                 input_matrix = Matrix.applyToAll(input_matrix, this.outputFunction);
             }
+            layerOutputs.push(Matrix.copy(input_matrix));
         }
         input_array = Matrix.toArray(input_matrix);
         if (returnLayerOutputs === true) {
@@ -86,41 +91,7 @@ class NeuralNetwork {
     }
 
     trainBP(input, labels) {
-        let feedForwardOutput = this.feedForward(input, true);
-        let guess = this.feedForward(input, false);
-        // let guess = feedForwardOutput.output;
-        let layerOutputs = feedForwardOutput.layerOutputs;
 
-        if (guess.length !== labels.length) {
-            throw `Labels do not fit Neural Net's output layer. Expected ${guess.length} labels but got ${labels.length}.`;
-        }
-
-        //convert arrays to matrix objects
-        labels = Matrix.fromArray(labels);
-        guess = Matrix.fromArray(guess);
-
-
-        //calculate error of output layer
-        let errors = [];
-        errors.push(Matrix.subtract(labels, guess));
-        errors[0] = Matrix.transpose(errors[0]);
-        //go backwards through all the layers and calculate their error
-        for (let i = this.layers.length - 1; i > 0; i--) {
-            //transpose the weights
-            let transposedWeights = Matrix.transpose(this.layers[i]);
-            //multiply weights by errors of its connected layer
-            let answer = Matrix.multiply(transposedWeights, errors[0]);
-            //using unshift because I want them to be in order from input layer to output layer
-            errors.unshift(answer);
-        }
-
-        //calculate weight deltas
-        let deltas = [];
-        let lr = this.learningRate;
-        for (let i = 0; i < this.layers.length; i++) {
-            layerOutputs[i] = Matrix.elementMult(layerOutputs[i], errors[i]);
-            layerOutputs[i] = Matrix.applyToAll(layerOutputs[i], (n) => { n * lr });
-        }
 
     }
 
@@ -311,6 +282,19 @@ class Matrix {
             }
         }
         return n;
+    }
+
+    static multiplyScalar(m, s) {
+        let matrixA = m;
+        let n = new Matrix(m.rows, m.columns);
+
+        for (let i = 0; i < m.rows; i++) {
+            for (let j = 0; j < m.columns; j++) {
+                n.data[i][j] = matrixA.data[i][j] * s;
+            }
+        }
+        return n;
+
     }
 
     static elementMult(a, b) {
