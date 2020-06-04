@@ -26,8 +26,6 @@ class NeuralNetwork {
         this.numberOfInputs = numberOfInputs;
         this.hiddenFunction = SIGMOID_FUNCTION;
         this.hiddenFunctionD = UN_SUGMOID_FUNCTION;
-        this.outputFunction = SIGN_FUNCTION;
-        this.outputFunctionD = UN_SIGN_FUNCTION;
         this.learningRate = 0.01;
         this.layers = [];
         this.biases = [];
@@ -69,20 +67,24 @@ class NeuralNetwork {
     }
 
     feedForward(input, returnLayerOutputs) {
-        let input_array = input;
-        let input_matrix = Matrix.fromArray(input_array);
+        //convert input array to a matrix object
+        let input_matrix = Matrix.fromArray(input);
+
         let layerOutputs = [];
+
         for (let i = 0; i < this.layers.length; i++) {
-            input_matrix = Matrix.multiply(input_matrix, Matrix.transpose(this.layers[i]));
+            //transpose the layer weights
+            let transposedWeights = Matrix.transpose(this.layers[i])
+            input_matrix = Matrix.multiply(input_matrix, transposedWeights);
+            //add a bias
             input_matrix = Matrix.add(input_matrix, this.biases[i]);
-            if (i < this.layers.length - 1) {
-                input_matrix = Matrix.applyToAll(input_matrix, this.hiddenFunction);
-            } else {
-                input_matrix = Matrix.applyToAll(input_matrix, this.outputFunction);
-            }
+            //apply a function to the outputs
+            input_matrix = Matrix.applyToAll(input_matrix, this.hiddenFunction);
+            //save each output to be output later
             layerOutputs.push(Matrix.copy(input_matrix));
         }
-        input_array = Matrix.toArray(input_matrix);
+        //convert back to array to output
+        let input_array = Matrix.toArray(input_matrix);
         if (returnLayerOutputs === true) {
             return { output: input_array, layerOutputs: layerOutputs }
         } else {
@@ -91,6 +93,9 @@ class NeuralNetwork {
     }
 
     trainBP(input, labels) {
+        let ffOutput = this.feedForward(input, true);
+        let yHat = ffOutput.output;
+        let layerOutputs = ffOutput.layerOutputs;
 
 
     }
