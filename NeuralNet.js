@@ -29,6 +29,18 @@ class NeuralNetwork {
         this.learningRate = 0.01;
         this.layers = [];
         this.biases = [];
+
+        /**
+         * How layers store weights:
+         * 
+         * [
+         *  [],
+         *  []
+         * ]
+         */
+
+
+
     }
 
     setLearningRate(lr) {
@@ -73,9 +85,8 @@ class NeuralNetwork {
         let layerOutputs = [];
 
         for (let i = 0; i < this.layers.length; i++) {
-            //transpose the layer weights
-            let transposedWeights = Matrix.transpose(this.layers[i])
-            input_matrix = Matrix.multiply(input_matrix, transposedWeights);
+            //multiply input by weights
+            input_matrix = Matrix.multiply(input_matrix, this.layers[i]);
             //add a bias
             input_matrix = Matrix.add(input_matrix, this.biases[i]);
             //apply a function to the outputs
@@ -107,12 +118,12 @@ class NeuralNetwork {
 
     addLayer(numberNodes) {
         if (this.layers.length === 0) {
-            let l = new Matrix(numberNodes, this.numberOfInputs);
+            let l = new Matrix(this.numberOfInputs, numberNodes);
             l.randomize();
             this.layers.push(l);
 
         } else {
-            let m = new Matrix(numberNodes, this.layers[this.layers.length - 1].rows);
+            let m = new Matrix(this.layers[this.layers.length - 1].rows, numberNodes);
             m.randomize();
             this.layers.push(m);
         }
