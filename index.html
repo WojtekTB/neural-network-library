@@ -11,13 +11,11 @@
 
     <script>
         let nn = new NeuralNetwork(4);
-        // nn.debugMode();
-        // nn.addLayer(4);
         nn.addLayer(4);
         nn.addLayer(2);
-        let a = nn.feedForward([1, 2, 3, 4]);
-        console.log(a);
-        // nn.trainBP([1, 2, 3, 4], [0, 1]);
+        // let a = nn.feedForward([1, 2, 3, 4]);
+        // console.log(a);
+        nn.trainBP([1, 2, 3, 4], [0, 1]);
     </script>
 
 </head>

@@ -107,8 +107,14 @@ class NeuralNetwork {
         let ffOutput = this.feedForward(input, true);
         let yHat = ffOutput.output;
         let layerOutputs = ffOutput.layerOutputs;
-
-
+        //convert arrays to matrix objects
+        yHat = Matrix.fromArray(yHat);
+        labels = Matrix.fromArray(labels);
+        //calculate error (using difference squared as cost function)
+        let error = Matrix.subtract(yHat, labels);
+        error = Matrix.applyToAll(error, function (n) { return Math.pow(n, 2) });
+        //add up all the errors
+        error = Matrix.sum(error);
     }
 
     reward() {
@@ -171,6 +177,16 @@ class Matrix {
                 this.set((Math.random() * 2) - 1, i, j);
             }
         }
+    }
+
+    static sum(m) {
+        let totalSum = 0;
+        for (let i = 0; i < m.rows; i++) {
+            for (let j = 0; j < m.columns; j++) {
+                totalSum += m.data[i][j];
+            }
+        }
+        return totalSum;
     }
 
     static cross(a, b) {
